@@ -225,6 +225,27 @@ public class ReservationService {
                 .toList();
     }
 
+    // "인기 메뉴 순위" — 취소되지 않은 예약(방문 시 먹을 메뉴 + 포장 메뉴)에서
+    // 실제로 몇 개씩 주문됐는지 합산합니다. 메뉴 키(예: "b1")별 수량 내림차순.
+    public java.util.List<java.util.Map<String, Object>> getMenuPopularity() {
+        java.util.Map<String, Integer> totals = new java.util.HashMap<>();
+        for (Reservation r : reservationRepository.findAll()) {
+            if ("CANCELLED".equals(r.getStatus()))
+                continue;
+            r.getMenus().forEach((key, qty) -> totals.merge(key, qty, Integer::sum));
+            r.getTakeoutMenus().forEach((key, qty) -> totals.merge(key, qty, Integer::sum));
+        }
+        return totals.entrySet().stream()
+                .sorted((a, b) -> b.getValue() - a.getValue())
+                .map(e -> {
+                    java.util.Map<String, Object> row = new java.util.HashMap<>();
+                    row.put("key", e.getKey());
+                    row.put("quantity", e.getValue());
+                    return row;
+                })
+                .toList();
+    }
+
     // 손님이 전화로 취소를 요청한 경우 등, 사장님은 결제된 예약도 취소할 수 있어야 해서
     // (실제 환불은 사장님이 직접 처리하신다는 전제로) 손님용 취소와 달리 결제 여부를
     // 확인하지 않습니다.

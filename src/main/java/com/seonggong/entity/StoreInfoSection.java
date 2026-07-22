@@ -42,6 +42,11 @@ public class StoreInfoSection {
     @Column(length = 50)
     private String icon;
 
+    // 사장님이 사진을 올리면 여기 서버 경로가 들어갑니다 (예: 주차장 사진).
+    // 필수는 아니라서 사진 없는 안내 문구도 그대로 잘 동작해요.
+    @Column(length = 300)
+    private String imageUrl;
+
     @Column(nullable = false)
     private int displayOrder = 0;
 

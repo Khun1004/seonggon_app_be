@@ -13,6 +13,7 @@ public class StoreInfoSectionResponse {
     private String title;
     private String content;
     private String icon;
+    private String imageUrl;
     private int displayOrder;
     private boolean active;
 
@@ -23,6 +24,7 @@ public class StoreInfoSectionResponse {
                 s.getTitle(),
                 s.getContent(),
                 s.getIcon(),
+                s.getImageUrl(),
                 s.getDisplayOrder(),
                 s.isActive());
     }

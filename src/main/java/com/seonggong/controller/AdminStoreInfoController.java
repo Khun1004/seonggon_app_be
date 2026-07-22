@@ -79,4 +79,19 @@ public class AdminStoreInfoController {
             return ResponseEntity.status(404).body(Map.of("message", e.getMessage()));
         }
     }
+
+    @PostMapping("/upload-photo")
+    public ResponseEntity<?> uploadPhoto(
+            @RequestHeader("X-Admin-Password") String adminPassword,
+            @RequestBody Map<String, String> body) {
+        try {
+            adminAuthService.requireAdmin(adminPassword);
+            String url = storeInfoService.uploadPhoto(body.get("imageBase64"));
+            return ResponseEntity.ok(Map.of("url", url));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(401).body(Map.of("message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(400).body(Map.of("message", e.getMessage()));
+        }
+    }
 }

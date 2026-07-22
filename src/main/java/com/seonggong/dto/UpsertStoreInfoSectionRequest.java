@@ -10,6 +10,7 @@ public class UpsertStoreInfoSectionRequest {
     private String title;
     private String content;
     private String icon;
+    private String imageUrl; // 업로드된 사진의 서버 경로 — 안 바꾸면 기존 값 그대로 보냅니다.
     private int displayOrder;
     private boolean active;
 }

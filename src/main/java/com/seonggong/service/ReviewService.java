@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -32,34 +31,6 @@ public class ReviewService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
 
-    private static final Random RANDOM = new Random();
-
-    // 관리자 화면이 아직 없어서, 리뷰가 등록되면 사장님 답변을 자동으로 붙여드려요.
-    // 평점에 따라 톤을 다르게 하고, 메뉴 이름이 있으면 자연스럽게 언급하도록 몇 가지
-    // 문구 중 하나를 무작위로 골라서 매번 조금씩 다르게 느껴지도록 했습니다.
-    private static final String[] REPLY_TEMPLATES_HIGH = {
-            "따뜻한 후기 정말 감사합니다! 다음에 오실 때도 정성껏 준비해드릴게요 :)",
-            "좋게 봐주셔서 감사드려요! 앞으로도 한결같은 맛으로 보답하겠습니다.",
-            "소중한 시간 내주셔서 리뷰 남겨주신 점 진심으로 감사합니다. 또 뵙겠습니다!",
-            "맛있게 드셨다니 저희도 정말 기쁘네요! 다음 방문도 기다리고 있을게요.",
-    };
-    private static final String[] REPLY_TEMPLATES_LOW = {
-            "소중한 의견 감사합니다. 말씀해 주신 부분 참고해서 더 나은 모습으로 보답하겠습니다.",
-            "방문해 주시고 솔직한 후기 남겨주셔서 감사해요. 더 신경 써서 준비하겠습니다.",
-    };
-
-    private String generateOwnerReply(Review review) {
-        String[] templates = review.getRating() >= 4 ? REPLY_TEMPLATES_HIGH : REPLY_TEMPLATES_LOW;
-        String base = templates[RANDOM.nextInt(templates.length)];
-
-        if (review.getMenuName() != null && !review.getMenuName().isBlank()) {
-            return String.format(
-                    "%s님, %s 맛있게 드셔주셔서 감사해요! %s",
-                    review.getDisplayName(), review.getMenuName(), base);
-        }
-        return String.format("%s님, %s", review.getDisplayName(), base);
-    }
-
     @Transactional
     public ReviewResponse createReview(CreateReviewRequest request) {
         Review review = new Review();
@@ -77,10 +48,7 @@ public class ReviewService {
             review.setPhotos(request.getPhotos());
         }
 
-        // 사장님 전용 관리 화면이 없어서, 등록과 동시에 감사 인사를 자동으로 달아드려요.
-        review.setOwnerReply(generateOwnerReply(review));
-        review.setOwnerReplyAt(LocalDateTime.now());
-
+        // 사장님이 관리자 화면에서 직접 답변을 남기기 전까지는 답변 없이 둡니다.
         Review saved = reviewRepository.save(review);
 
         notificationService.create(
@@ -160,14 +128,24 @@ public class ReviewService {
     }
 
     // ── 관리자 전용 ──────────────────────────────────────────────
-    // 등록 시 자동으로 붙는 감사 인사 대신, 사장님이 직접 답변을 남기고 싶을 때
-    // 이 메서드로 덮어씁니다.
+    // 사장님이 관리자 화면에서 직접 답변을 남기거나 수정할 때 이 메서드로 저장합니다.
     @Transactional
     public void setOwnerReply(Long id, String reply) {
         Review review = reviewRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
         review.setOwnerReply(reply);
         review.setOwnerReplyAt(LocalDateTime.now());
+
+        // 리뷰를 남긴 손님에게 사장님이 답변을 남겼다고 알려줍니다.
+        // 비회원(로그인 없이 작성한) 리뷰는 loginId가 없어서 알림을 보낼 대상이 없어요.
+        if (review.getLoginId() != null && !review.getLoginId().isBlank()) {
+            notificationService.create(
+                    review.getLoginId(),
+                    "REVIEW_REPLY",
+                    "사장님이 답변을 남겼어요",
+                    reply.length() > 60 ? reply.substring(0, 60) + "..." : reply,
+                    "/(tabs)/reviews");
+        }
     }
 
     // 예약 시 입력한 전화번호로 가입된 회원이, "리뷰 작성 (1,500원 적립)" 버튼을 통해

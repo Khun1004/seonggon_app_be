@@ -92,6 +92,17 @@ public class RoomService {
         room.setActive(true);
     }
 
+    // 진짜 삭제 — 숨기기(active=false)와 달리 DB에서 완전히 지웁니다.
+    // 이 좌석으로 잡혀있던 예전 예약이 있다면, 그 예약의 좌석 표시가
+    // "삭제된 좌석"으로 보일 수 있다는 점을 관리자 화면에서 미리 안내해요.
+    @Transactional
+    public void deleteRoom(Long id) {
+        if (!roomRepository.existsById(id)) {
+            throw new IllegalArgumentException("좌석을 찾을 수 없습니다.");
+        }
+        roomRepository.deleteById(id);
+    }
+
     private void applyRequest(Room room, UpsertRoomRequest request) {
         room.setNumber(request.getNumber());
         room.setFloor(request.getFloor());

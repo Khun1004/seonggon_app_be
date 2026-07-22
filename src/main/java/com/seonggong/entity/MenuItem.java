@@ -1,10 +1,17 @@
 package com.seonggong.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -57,4 +64,10 @@ public class MenuItem {
     // 있을 수 있어서, 진짜로 지우지 않고 목록에서만 안 보이게 합니다.
     @Column(nullable = false)
     private boolean active = true;
+
+    // 메뉴 상세 화면의 "종류" 탭에 보여줄 재료 목록 (예: 백숙에 들어간 버섯 종류)
+    @ElementCollection
+    @CollectionTable(name = "menu_item_ingredients", joinColumns = @JoinColumn(name = "menu_item_id"))
+    @OrderColumn(name = "display_order")
+    private List<MenuIngredient> ingredients = new ArrayList<>();
 }

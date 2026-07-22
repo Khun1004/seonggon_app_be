@@ -1,5 +1,8 @@
 package com.seonggong.dto;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.seonggong.entity.MenuItem;
 
 import lombok.AllArgsConstructor;
@@ -18,8 +21,14 @@ public class MenuItemResponse {
     private String imageUrl;
     private int displayOrder;
     private boolean active;
+    private List<MenuIngredientDto> ingredients;
 
     public static MenuItemResponse from(MenuItem m) {
+        List<MenuIngredientDto> ingredients = m.getIngredients() == null
+                ? List.of()
+                : m.getIngredients().stream()
+                        .map(i -> new MenuIngredientDto(i.getName(), i.getImageUrl()))
+                        .collect(Collectors.toList());
         return new MenuItemResponse(
                 m.getId(),
                 m.getCategory(),
@@ -30,6 +39,7 @@ public class MenuItemResponse {
                 m.isHot(),
                 m.getImageUrl(),
                 m.getDisplayOrder(),
-                m.isActive());
+                m.isActive(),
+                ingredients);
     }
 }

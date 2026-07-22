@@ -97,6 +97,21 @@ public class AdminRoomController {
         }
     }
 
+    @DeleteMapping("/{id}/permanent")
+    public ResponseEntity<?> deleteRoomPermanently(
+            @PathVariable("id") Long id,
+            @RequestHeader("X-Admin-Password") String adminPassword) {
+        try {
+            adminAuthService.requireAdmin(adminPassword);
+            roomService.deleteRoom(id);
+            return ResponseEntity.ok(Map.of("message", "좌석이 삭제되었습니다."));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(401).body(Map.of("message", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404).body(Map.of("message", e.getMessage()));
+        }
+    }
+
     @PostMapping("/upload-photo")
     public ResponseEntity<?> uploadPhoto(
             @RequestHeader("X-Admin-Password") String adminPassword,

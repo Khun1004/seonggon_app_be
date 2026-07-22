@@ -72,6 +72,17 @@ public class MenuService {
         item.setActive(true);
     }
 
+    // 진짜 삭제 — 숨기기(active=false)와 달리 DB에서 완전히 지웁니다.
+    // 예전 예약/리뷰가 이 메뉴 id를 참조하고 있었다면, 거기서 메뉴 이름이
+    // 빈 값으로 보일 수 있다는 점을 관리자 화면에서 미리 안내해요.
+    @Transactional
+    public void deleteMenu(Long id) {
+        if (!menuItemRepository.existsById(id)) {
+            throw new IllegalArgumentException("메뉴를 찾을 수 없습니다.");
+        }
+        menuItemRepository.deleteById(id);
+    }
+
     private void applyRequest(MenuItem item, UpsertMenuItemRequest request) {
         item.setCategory(request.getCategory());
         item.setName(request.getName());
@@ -84,6 +95,17 @@ public class MenuService {
         }
         item.setDisplayOrder(request.getDisplayOrder());
         item.setActive(request.isActive());
+
+        // null이면 재료 목록은 그대로 두고, 값이 오면 통째로 교체합니다.
+        if (request.getIngredients() != null) {
+            item.getIngredients().clear();
+            for (com.seonggong.dto.MenuIngredientDto dto : request.getIngredients()) {
+                com.seonggong.entity.MenuIngredient ingredient = new com.seonggong.entity.MenuIngredient();
+                ingredient.setName(dto.getName());
+                ingredient.setImageUrl(dto.getImageUrl());
+                item.getIngredients().add(ingredient);
+            }
+        }
     }
 
     // 리뷰 사진 업로드와 똑같은 방식 — base64로 받아서 서버 파일로 저장하고 경로를 돌려줍니다.

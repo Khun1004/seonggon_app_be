@@ -1,6 +1,12 @@
 package com.seonggong.service;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -63,7 +69,31 @@ public class StoreInfoService {
         section.setTitle(request.getTitle());
         section.setContent(request.getContent());
         section.setIcon(request.getIcon());
+        if (request.getImageUrl() != null) {
+            section.setImageUrl(request.getImageUrl());
+        }
         section.setDisplayOrder(request.getDisplayOrder());
         section.setActive(request.isActive());
+    }
+
+    // 메뉴/좌석 사진과 똑같은 방식 — base64로 받아서 서버 파일로 저장하고 경로를 돌려줍니다.
+    public String uploadPhoto(String imageBase64) {
+        try {
+            String pureBase64 = imageBase64.contains(",")
+                    ? imageBase64.substring(imageBase64.indexOf(",") + 1)
+                    : imageBase64;
+            byte[] imageBytes = Base64.getDecoder().decode(pureBase64);
+
+            Path dir = Paths.get("uploads", "store-info");
+            Files.createDirectories(dir);
+
+            String fileName = UUID.randomUUID() + ".jpg";
+            Path filePath = dir.resolve(fileName);
+            Files.write(filePath, imageBytes);
+
+            return "/uploads/store-info/" + fileName;
+        } catch (IOException e) {
+            throw new IllegalArgumentException("사진 저장에 실패했습니다.");
+        }
     }
 }
