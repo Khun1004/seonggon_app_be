@@ -12,9 +12,13 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.seonggong.dto.MenuIngredientDto;
 import com.seonggong.dto.MenuItemResponse;
 import com.seonggong.dto.UpsertMenuItemRequest;
+import com.seonggong.entity.IngredientSet;
+import com.seonggong.entity.MenuIngredient;
 import com.seonggong.entity.MenuItem;
+import com.seonggong.repository.IngredientSetRepository;
 import com.seonggong.repository.MenuItemRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -24,8 +28,10 @@ import lombok.RequiredArgsConstructor;
 public class MenuService {
 
     private final MenuItemRepository menuItemRepository;
+    private final IngredientSetRepository ingredientSetRepository;
 
     // 손님용 — 숨겨지지 않은 메뉴만 카테고리·순서대로
+    @Transactional(readOnly = true)
     public List<MenuItemResponse> getActiveMenus() {
         return menuItemRepository.findByActiveTrueOrderByCategoryAscDisplayOrderAsc()
                 .stream()
@@ -34,6 +40,7 @@ public class MenuService {
     }
 
     // 관리자용 — 숨겨진 메뉴도 포함해서 전체
+    @Transactional(readOnly = true)
     public List<MenuItemResponse> getAllMenusForAdmin() {
         return menuItemRepository.findAllByOrderByCategoryAscDisplayOrderAsc()
                 .stream()
@@ -96,11 +103,21 @@ public class MenuService {
         item.setDisplayOrder(request.getDisplayOrder());
         item.setActive(request.isActive());
 
-        // null이면 재료 목록은 그대로 두고, 값이 오면 통째로 교체합니다.
+        if (request.getIngredientSetId() != null) {
+            IngredientSet set = ingredientSetRepository.findById(request.getIngredientSetId())
+                    .orElseThrow(() -> new IllegalArgumentException("재료 세트를 찾을 수 없습니다."));
+            item.setIngredientSet(set);
+        } else {
+            item.setIngredientSet(null);
+        }
+
+        // ingredients는 세트를 쓰든 안 쓰든 항상 "이 메뉴만의 추가/개별 재료"예요.
+        // 세트를 쓰면 손님 화면에서는 세트 재료 뒤에 이 재료들이 이어붙어서 보여요
+        // (예: 백숙 기본 11종 + 능이버섯 + 오리고기).
         if (request.getIngredients() != null) {
             item.getIngredients().clear();
-            for (com.seonggong.dto.MenuIngredientDto dto : request.getIngredients()) {
-                com.seonggong.entity.MenuIngredient ingredient = new com.seonggong.entity.MenuIngredient();
+            for (MenuIngredientDto dto : request.getIngredients()) {
+                MenuIngredient ingredient = new MenuIngredient();
                 ingredient.setName(dto.getName());
                 ingredient.setImageUrl(dto.getImageUrl());
                 item.getIngredients().add(ingredient);

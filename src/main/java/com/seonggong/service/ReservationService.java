@@ -14,6 +14,7 @@ import com.seonggong.dto.PayReservationRequest;
 import com.seonggong.dto.ReservationResponse;
 import com.seonggong.dto.TakenSlotResponse;
 import com.seonggong.entity.Reservation;
+import com.seonggong.repository.ClosedDateRepository;
 import com.seonggong.repository.ReservationRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final NotificationService notificationService;
+    private final ClosedDateRepository closedDateRepository;
 
     // 특정 날짜에 이미 예약이 찬 (자리, 시간) 조합 목록 — 예약 화면에서 이미 찬 버튼을 회색 처리할 때 씁니다.
     public List<TakenSlotResponse> getAvailability(LocalDate date) {
@@ -56,6 +58,16 @@ public class ReservationService {
         }
     }
 
+    // 관리자가 "휴무일"로 등록한 날짜는, 예약(매장 식사)이든 포장이든 화면에서
+    // 달력을 회색 처리해도 API를 직접 호출하면 우회할 수 있으니, 서버에서도
+    // 한 번 더 막아줍니다.
+    private void validateNotClosed(LocalDate date) {
+        if (closedDateRepository.existsByDate(date)) {
+            throw new IllegalStateException(
+                    "죄송합니다, 그 날짜는 휴무일이라 예약(포장)을 받을 수 없어요. 다른 날짜를 선택해 주세요.");
+        }
+    }
+
     // 저장 직전에 서버가 한 번 더 확인합니다 — 화면에 이미 찬 시간이 회색 처리되어 있어도,
     // 두 손님이 거의 동시에 같은 자리를 눌렀을 수 있기 때문에 최종 확인은 반드시 서버에서 합니다.
     @Transactional
@@ -63,6 +75,7 @@ public class ReservationService {
         LocalDate date = LocalDate.parse(request.getDate());
         String type = TAKEOUT.equals(request.getType()) ? TAKEOUT : "DINE_IN";
 
+        validateNotClosed(date);
         validateNotPast(date, request.getTime());
 
         // 포장(TAKEOUT)은 실제 좌석을 쓰지 않아서, 같은 시간에 여러 명이 겹쳐도 됩니다.
@@ -121,6 +134,7 @@ public class ReservationService {
         LocalDate date = LocalDate.parse(request.getDate());
         String type = TAKEOUT.equals(request.getType()) ? TAKEOUT : "DINE_IN";
 
+        validateNotClosed(date);
         validateNotPast(date, request.getTime());
 
         if (!TAKEOUT.equals(type)) {

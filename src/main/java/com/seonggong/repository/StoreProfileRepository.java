@@ -1,0 +1,8 @@
+package com.seonggong.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.seonggong.entity.StoreProfile;
+
+public interface StoreProfileRepository extends JpaRepository<StoreProfile, Long> {
+}
