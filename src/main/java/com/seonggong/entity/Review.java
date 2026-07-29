@@ -46,6 +46,11 @@ public class Review {
     @Column(length = 50)
     private String menuName;
 
+    // 이 리뷰가 어느 예약(방문)에서 작성됐는지 — 예약 내역 화면에서 "이 예약에는
+    // 이미 리뷰를 썼는지"를 정확히 확인하는 데 씁니다. 예약과 상관없이 작성된
+    // 리뷰(예: 리뷰 탭에서 바로 작성)는 null일 수 있어요.
+    private Long reservationId;
+
     // "이런 점이 좋았어요" 선택 키워드들 (예: "음식이 맛있어요", "친절해요")
     @ElementCollection
     @CollectionTable(name = "review_keywords", joinColumns = @JoinColumn(name = "review_id"))

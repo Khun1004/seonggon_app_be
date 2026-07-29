@@ -21,6 +21,7 @@ public class ReviewResponse {
     private double rating;
     private String text;
     private String menuName;
+    private Long reservationId;
     private List<String> keywords;
     private List<String> photos;
     private int likes;
@@ -39,6 +40,7 @@ public class ReviewResponse {
                 review.getRating(),
                 review.getText(),
                 review.getMenuName(),
+                review.getReservationId(),
                 review.getKeywords(),
                 review.getPhotos(),
                 review.getLikes(),

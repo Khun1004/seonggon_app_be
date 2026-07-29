@@ -30,6 +30,13 @@ public class VisitRewardController {
         return ResponseEntity.ok(visitRewardService.getStatus(phone, loginId));
     }
 
+    @GetMapping("/history")
+    public ResponseEntity<?> getHistory(
+            @RequestParam("phone") String phone,
+            @RequestParam(value = "loginId", required = false) String loginId) {
+        return ResponseEntity.ok(visitRewardService.getHistory(phone, loginId));
+    }
+
     @PostMapping("/claim")
     public ResponseEntity<?> claim(@RequestBody ClaimVisitRewardRequest request) {
         try {

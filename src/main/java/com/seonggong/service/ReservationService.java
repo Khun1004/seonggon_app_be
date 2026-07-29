@@ -26,6 +26,7 @@ public class ReservationService {
     private static final String CONFIRMED = "CONFIRMED";
     private static final String CANCELLED = "CANCELLED";
     private static final String PAID = "PAID";
+    private static final String REFUNDED = "REFUNDED";
     private static final String TAKEOUT = "TAKEOUT";
 
     private final ReservationRepository reservationRepository;
@@ -261,20 +262,34 @@ public class ReservationService {
     }
 
     // 손님이 전화로 취소를 요청한 경우 등, 사장님은 결제된 예약도 취소할 수 있어야 해서
-    // (실제 환불은 사장님이 직접 처리하신다는 전제로) 손님용 취소와 달리 결제 여부를
-    // 확인하지 않습니다.
+    // 손님용 취소와 달리 결제 여부를 확인하지 않습니다. 대신, 결제가 되어 있던
+    // 예약이면 취소하면서 결제 상태를 "환불됨"으로 같이 바꿔서 손님 화면에도
+    // 환불 처리됐다는 게 보이게 합니다. (모의 결제라 실제 돈은 안 움직이지만,
+    // 사장님이 실제로 환불해 주셨다는 걸 앱에도 기록해 두는 거예요.)
     @Transactional
     public void cancelReservationAsAdmin(Long id) {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
+
+        boolean wasPaid = PAID.equals(reservation.getPaymentStatus());
         reservation.setStatus(CANCELLED);
+        if (wasPaid) {
+            reservation.setPaymentStatus(REFUNDED);
+        }
+
+        String message = wasPaid
+                ? String.format(
+                        "%s %s · %s 예약이 사장님에 의해 취소되었어요. 결제하신 %,d원은 환불 처리됩니다.",
+                        reservation.getDate(), reservation.getTime(), reservation.getRoomLabel(),
+                        reservation.getPaidAmount())
+                : String.format("%s %s · %s 예약이 사장님에 의해 취소되었습니다.", reservation.getDate(),
+                        reservation.getTime(), reservation.getRoomLabel());
 
         notificationService.create(
                 reservation.getLoginId(),
                 TAKEOUT.equals(reservation.getType()) ? "TAKEOUT_CANCELLED" : "RESERVATION_CANCELLED",
                 TAKEOUT.equals(reservation.getType()) ? "포장 주문이 취소되었어요" : "예약이 취소되었어요",
-                String.format("%s %s · %s 예약이 사장님에 의해 취소되었습니다.", reservation.getDate(), reservation.getTime(),
-                        reservation.getRoomLabel()),
+                message,
                 "/(tabs)/reservationcheck");
     }
 }

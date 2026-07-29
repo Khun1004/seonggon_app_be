@@ -52,6 +52,7 @@ public class StoreProfileService {
         profile.setNaverRating(request.getNaverRating());
         profile.setNaverReviewCount(request.getNaverReviewCount());
         profile.setBlogReviewCount(request.getBlogReviewCount());
+        profile.setAllowWeekendReservations(request.isAllowWeekendReservations());
         return StoreProfileResponse.from(profile);
     }
 

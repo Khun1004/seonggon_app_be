@@ -32,7 +32,7 @@ public class AdminReservationTimeConfigController {
             @RequestHeader("X-Admin-Password") String adminPassword) {
         try {
             adminAuthService.requireAdmin(adminPassword);
-            return ResponseEntity.ok(service.getConfig(type));
+            return ResponseEntity.ok(service.getConfig(normalize(type)));
         } catch (SecurityException e) {
             return ResponseEntity.status(401).body(Map.of("message", e.getMessage()));
         }
@@ -45,9 +45,17 @@ public class AdminReservationTimeConfigController {
             @RequestBody UpsertReservationTimeConfigRequest request) {
         try {
             adminAuthService.requireAdmin(adminPassword);
-            return ResponseEntity.ok(service.updateConfig(type, request));
+            return ResponseEntity.ok(service.updateConfig(normalize(type), request));
         } catch (SecurityException e) {
             return ResponseEntity.status(401).body(Map.of("message", e.getMessage()));
         }
+    }
+
+    // 손님용 컨트롤러(ReservationTimeConfigController)와 완전히 똑같은 방식으로
+    // "dine-in"/"takeout"을 "DINE_IN"/"TAKEOUT"으로 맞춰줍니다. 이게 서로
+    // 달랐던 게 바로 "관리자가 시간을 바꿔도 손님 화면엔 안 보이던" 원인이었어요 —
+    // 두 화면이 서로 다른 이름으로 각각 따로 저장/조회하고 있었던 거예요.
+    private String normalize(String type) {
+        return "takeout".equalsIgnoreCase(type) ? "TAKEOUT" : "DINE_IN";
     }
 }

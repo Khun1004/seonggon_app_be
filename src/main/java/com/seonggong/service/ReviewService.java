@@ -39,6 +39,7 @@ public class ReviewService {
         review.setRating(request.getRating());
         review.setText(request.getText());
         review.setMenuName(request.getMenuName());
+        review.setReservationId(request.getReservationId());
         review.setRewardEligible(request.isRewardEligible());
 
         if (request.getKeywords() != null) {
@@ -150,6 +151,8 @@ public class ReviewService {
 
     // 예약 시 입력한 전화번호로 가입된 회원이, "리뷰 작성 (1,500원 적립)" 버튼을 통해
     // 적립 대상 리뷰를 하나라도 썼는지 확인합니다. 일반 리뷰 작성은 포함하지 않습니다.
+    // (예약별로 정확히 확인하고 싶으면 /api/reviews/me 응답의 reservationId를 프론트에서
+    // 직접 비교하세요 — 이 함수는 "예전 방식"과의 호환을 위해 남겨둔 전체 여부 확인이에요.)
     public boolean hasReviewedByPhone(String phone) {
         return userRepository.findByPhone(phone)
                 .map(user -> reviewRepository.existsByLoginIdAndRewardEligibleTrue(user.getLoginId()))

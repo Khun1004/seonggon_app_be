@@ -1,5 +1,7 @@
 package com.seonggong.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,4 +16,7 @@ public class UpsertStoreProfileRequest {
     private Double naverRating;
     private Integer naverReviewCount;
     private Integer blogReviewCount;
+
+    @JsonProperty("allowWeekendReservations")
+    private boolean allowWeekendReservations;
 }

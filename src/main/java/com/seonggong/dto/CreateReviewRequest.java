@@ -13,6 +13,7 @@ public class CreateReviewRequest {
     private double rating;
     private String text;
     private String menuName;
+    private Long reservationId;
     private List<String> keywords;
     private List<String> photos;
     private boolean rewardEligible;

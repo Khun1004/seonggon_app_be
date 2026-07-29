@@ -43,4 +43,9 @@ public class StoreProfile {
 
     // 블로그 리뷰 개수도 마찬가지로 사장님이 직접 입력하는 참고용 숫자예요.
     private Integer blogReviewCount;
+
+    // 기본은 false — 토/일요일은 손님 예약 화면에서 회색 처리(전화 예약만)돼요.
+    // 사장님이 이 값을 true로 켜면, 주말도 앱에서 바로 예약할 수 있게 돼요.
+    @Column(nullable = false)
+    private boolean allowWeekendReservations = false;
 }
