@@ -10,9 +10,9 @@ import lombok.Setter;
 public class CreateReviewRequest {
     private String loginId;
     private String displayName;
-    private double rating;
     private String text;
-    private String menuName;
+    // 손님이 고른 메뉴들과 메뉴마다 매긴 별점 — 최소 1개는 있어야 해요.
+    private List<MenuRatingItem> menuRatings;
     private Long reservationId;
     private List<String> keywords;
     private List<String> photos;

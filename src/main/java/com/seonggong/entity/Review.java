@@ -36,15 +36,20 @@ public class Review {
     @Column(nullable = false, length = 30)
     private String displayName;
 
+    // 카드 맨 위에 보여줄 "전체 별점" — 손님이 직접 매기는 값이 아니라,
+    // 아래 menuRatings(메뉴별 별점)의 평균을 저장해서 계산 없이 바로 정렬/표시에
+    // 쓸 수 있게 해요. createReview 시점에 서비스에서 계산해서 넣어줍니다.
     @Column(nullable = false)
     private double rating;
 
     @Column(nullable = false, length = 2000)
     private String text;
 
-    // 먹은 메뉴 (선택)
-    @Column(length = 50)
-    private String menuName;
+    // 메뉴 하나당 별점 하나 — 손님이 여러 메뉴를 드셨으면 각 메뉴마다 따로
+    // 별점을 매길 수 있어요. "메뉴별 평점" 통계도 이 목록을 그대로 씁니다.
+    @ElementCollection
+    @CollectionTable(name = "review_menu_ratings", joinColumns = @JoinColumn(name = "review_id"))
+    private List<MenuRatingEntry> menuRatings = new ArrayList<>();
 
     // 이 리뷰가 어느 예약(방문)에서 작성됐는지 — 예약 내역 화면에서 "이 예약에는
     // 이미 리뷰를 썼는지"를 정확히 확인하는 데 씁니다. 예약과 상관없이 작성된

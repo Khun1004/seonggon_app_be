@@ -21,10 +21,14 @@ public class AdminAuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
+        String businessNumber = body.get("businessNumber");
+        String phone = body.get("phone");
         String password = body.get("password");
-        if (adminAuthService.isValidPassword(password)) {
+
+        if (adminAuthService.isValidLogin(businessNumber, phone, password)) {
             return ResponseEntity.ok(Map.of("success", true));
         }
-        return ResponseEntity.status(401).body(Map.of("message", "비밀번호가 올바르지 않습니다."));
+        return ResponseEntity.status(401)
+                .body(Map.of("message", "사업자등록번호, 전화번호, 비밀번호를 다시 확인해 주세요."));
     }
 }

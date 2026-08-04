@@ -97,9 +97,13 @@ public class AdminReviewController {
         try {
             StringBuilder context = new StringBuilder();
             context.append("손님 이름: ").append(review.getDisplayName()).append("\n");
-            context.append("별점: ").append(review.getRating()).append("점/5점\n");
-            if (review.getMenuName() != null && !review.getMenuName().isBlank()) {
-                context.append("주문 메뉴: ").append(review.getMenuName()).append("\n");
+            context.append("전체 별점: ").append(review.getRating()).append("점/5점\n");
+            if (review.getMenuRatings() != null && !review.getMenuRatings().isEmpty()) {
+                String menuSummary = review.getMenuRatings().stream()
+                        .map(m -> m.getMenuName() + "(" + m.getRating() + "점)")
+                        .reduce((a, b) -> a + ", " + b)
+                        .orElse("");
+                context.append("주문 메뉴별 별점: ").append(menuSummary).append("\n");
             }
             context.append("리뷰 내용: ").append(review.getText()).append("\n");
 

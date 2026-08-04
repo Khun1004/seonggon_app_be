@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.seonggong.dto.CreateReviewRequest;
 import com.seonggong.dto.ReviewResponse;
+import com.seonggong.entity.MenuRatingEntry;
 import com.seonggong.entity.Review;
 import com.seonggong.entity.User;
 import com.seonggong.repository.ReviewRepository;
@@ -33,14 +34,26 @@ public class ReviewService {
 
     @Transactional
     public ReviewResponse createReview(CreateReviewRequest request) {
+        if (request.getMenuRatings() == null || request.getMenuRatings().isEmpty()) {
+            throw new IllegalArgumentException("메뉴를 하나 이상 선택하고 별점을 매겨 주세요.");
+        }
+
         Review review = new Review();
         review.setLoginId(request.getLoginId());
         review.setDisplayName(request.getDisplayName());
-        review.setRating(request.getRating());
         review.setText(request.getText());
-        review.setMenuName(request.getMenuName());
         review.setReservationId(request.getReservationId());
         review.setRewardEligible(request.isRewardEligible());
+
+        List<MenuRatingEntry> entries = request.getMenuRatings().stream()
+                .map(m -> new MenuRatingEntry(m.getMenuName(), m.getRating()))
+                .toList();
+        review.setMenuRatings(entries);
+
+        // 카드 맨 위 "전체 별점"은 손님이 따로 매기지 않고, 메뉴별 별점의
+        // 평균으로 자동 계산해서 저장해요.
+        double average = entries.stream().mapToDouble(MenuRatingEntry::getRating).average().orElse(0);
+        review.setRating(average);
 
         if (request.getKeywords() != null) {
             review.setKeywords(request.getKeywords());

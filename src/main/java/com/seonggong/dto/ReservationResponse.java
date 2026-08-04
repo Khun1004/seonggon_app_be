@@ -21,6 +21,10 @@ public class ReservationResponse {
         private String date;
         private String time;
         private String name;
+        // 이 예약을 만든 회원의 로그인 아이디 — 손님이 앱에서 직접 예약하면 항상
+        // 채워지고, 사장님이 관리자 화면에서 대신 등록해준 예약은 비어있어요.
+        // 관리자 화면에서 "회원"/"미등록"을 구분하는 데 씁니다.
+        private String loginId;
         private String phone;
         private int peopleCount;
         private String message;
@@ -44,6 +48,7 @@ public class ReservationResponse {
                                 r.getDate().toString(),
                                 r.getTime(),
                                 r.getName(),
+                                r.getLoginId(),
                                 r.getPhone(),
                                 r.getPeopleCount(),
                                 r.getMessage(),

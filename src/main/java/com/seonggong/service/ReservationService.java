@@ -261,6 +261,30 @@ public class ReservationService {
                 .toList();
     }
 
+    // 위와 똑같은데, "실제로 결제까지 완료된" 예약만 세요. 사장님이 "결제한
+    // 손님들이 실제로 어떤 메뉴를 얼마나 골랐는지" 정확히 보고 싶어하셔서
+    // 만든 별도 집계예요.
+    public java.util.List<java.util.Map<String, Object>> getPaidMenuPopularity() {
+        java.util.Map<String, Integer> totals = new java.util.HashMap<>();
+        for (Reservation r : reservationRepository.findAll()) {
+            if ("CANCELLED".equals(r.getStatus()))
+                continue;
+            if (!PAID.equals(r.getPaymentStatus()))
+                continue;
+            r.getMenus().forEach((key, qty) -> totals.merge(key, qty, Integer::sum));
+            r.getTakeoutMenus().forEach((key, qty) -> totals.merge(key, qty, Integer::sum));
+        }
+        return totals.entrySet().stream()
+                .sorted((a, b) -> b.getValue() - a.getValue())
+                .map(e -> {
+                    java.util.Map<String, Object> row = new java.util.HashMap<>();
+                    row.put("key", e.getKey());
+                    row.put("quantity", e.getValue());
+                    return row;
+                })
+                .toList();
+    }
+
     // 손님이 전화로 취소를 요청한 경우 등, 사장님은 결제된 예약도 취소할 수 있어야 해서
     // 손님용 취소와 달리 결제 여부를 확인하지 않습니다. 대신, 결제가 되어 있던
     // 예약이면 취소하면서 결제 상태를 "환불됨"으로 같이 바꿔서 손님 화면에도

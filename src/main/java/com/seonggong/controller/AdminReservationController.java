@@ -125,4 +125,15 @@ public class AdminReservationController {
             return ResponseEntity.status(401).body(Map.of("message", e.getMessage()));
         }
     }
+
+    @GetMapping("/paid-menu-popularity")
+    public ResponseEntity<?> getPaidMenuPopularity(
+            @RequestHeader("X-Admin-Password") String adminPassword) {
+        try {
+            adminAuthService.requireAdmin(adminPassword);
+            return ResponseEntity.ok(reservationService.getPaidMenuPopularity());
+        } catch (SecurityException e) {
+            return ResponseEntity.status(401).body(Map.of("message", e.getMessage()));
+        }
+    }
 }
